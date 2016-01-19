@@ -1,12 +1,17 @@
 package com.example.blacklist;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -18,6 +23,7 @@ public class MainActivity extends ActionBarActivity {
     private List<BlacklistNumber> data;
     private BlacklistAdapter adapter;
     private BlacklistNumberDAO dao;
+    private int position;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +37,61 @@ public class MainActivity extends ActionBarActivity {
 
         lv_main.setAdapter(adapter);
 
+        lv_main.setOnCreateContextMenuListener(this);
+
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+
+        menu.add(0, 1, 0, "Update");
+        menu.add(0, 2, 0, "Delete");
+
+        AdapterView.AdapterContextMenuInfo adapterContextMenuInfo = (AdapterView.AdapterContextMenuInfo) menuInfo;
+        position = adapterContextMenuInfo.position;
+
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        BlacklistNumber number = data.get(position);
+
+        switch (item.getItemId()) {
+            case 1:
+                updateList(number);
+                break;
+            case 2:
+                dao.delete(number.get_id());
+                data.remove(position);
+                adapter.notifyDataSetChanged();
+                break;
+            default:
+                break;
+        }
+
+        return super.onContextItemSelected(item);
+    }
+
+    public void updateList(final BlacklistNumber blacklistNumber){
+        final EditText editText = new EditText(this);
+        editText.setHint(blacklistNumber.getNumber());
+        new AlertDialog.Builder(this)
+                .setTitle("Update Number")
+                .setView(editText)
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Update", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String number = editText.getText().toString();
+                        //update data list
+                        blacklistNumber.setNumber(number);
+                        //update db
+                        dao.update(blacklistNumber);
+                        adapter.notifyDataSetChanged();
+                    }
+                })
+                .show();
     }
 
     @Override
@@ -84,6 +145,23 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public void add_number(View view) {
+        final EditText editText = new EditText(this);
+        editText.setHint("Enter new number");
+        new AlertDialog.Builder(this)
+                .setTitle("Add Number")
+                .setView(editText)
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Add", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String number = editText.getText().toString();
+                        BlacklistNumber newNumber = new BlacklistNumber(-1, number);
+                        dao.add(newNumber);
+                        data.add(0,newNumber);
+                        adapter.notifyDataSetChanged();
+                    }
+                })
+                .show();
 
     }
 }

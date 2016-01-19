@@ -59,7 +59,7 @@ public class BlacklistNumberDAO {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         List<BlacklistNumber> blacklistNumbers = new ArrayList<BlacklistNumber>();
 
-        Cursor cursor = db.query("numbers", null, null, null, null, null, null, null);
+        Cursor cursor = db.query("numbers", null, null, null, null, null, "_id desc");
 
         while (cursor.moveToNext()) {
             int id = cursor.getInt(0);
